@@ -1,109 +1,123 @@
-class SchanaModGlobalChatServerSettings {
-	
-    protected static string DIR = "$profile:SchanaModGlobalChat";
-    protected static string PATH = DIR + "\\server-settings.json";
-    static vector DEFAULTColorDirect = "255 255 255"; // white
-    static vector DEFAULTColorGlobal = "255 213 79"; // amber 300
-    static vector DEFAULTColorServer = "79 195 247"; // light blue 300
-    static vector DEFAULTColorAlert = "255 92 71"; // deep orange 300
-
-    ref SchanaColour ColorDirect = new SchanaColour (DEFAULTColorDirect);
-    ref SchanaColour ColorDirectPlayer = new SchanaColour (DEFAULTColorDirect);
-   	ref SchanaColour ColorGlobal = new SchanaColour (DEFAULTColorGlobal);
-    ref SchanaColour ColorGlobalPlayer = new SchanaColour (DEFAULTColorGlobal);
-    ref SchanaColour ColorServer = new SchanaColour (DEFAULTColorServer);
-    ref SchanaColour ColorAlert = new SchanaColour (DEFAULTColorAlert);
-
-
-    int GetColorDirect () {
-        return ColorDirect.Get ();
-    }
-	
-    int GetColorDirectPlayer () {
-        return ColorDirectPlayer.Get ();
-    }
-
-
-    int GetColorGlobal () {
-        return ColorGlobal.Get ();
-    }
-	
-    int GetColorGlobalPlayer () {
-        return ColorGlobalPlayer.Get ();
-    }
-
-    int GetColorServer () {
-        return ColorServer.Get ();
-    }
-
-    int GetColorAlert () {
-        return ColorAlert.Get ();
-    }
-
-    void Save () {
-        if (GetGame ().IsServer ()) {
-            if (!FileExist (DIR)) {
-                MakeDirectory (DIR);
-            }
-            JsonFileLoader<SchanaModGlobalChatServerSettings>.JsonSaveFile (PATH, this);
-        }
-    }
-
-	void Load (){
-		if (FileExist (PATH)) {
-    	    JsonFileLoader<SchanaModGlobalChatServerSettings>.JsonLoadFile (PATH, this);
-        }
-		Save ();
-	}
-	
-	void Debug (){
-		Print ("[SchanaChat] ColorDirect");
-		Print (ColorDirect.Debug ());
-		Print ("[SchanaChat] ColorDirectPlayer");
-		Print (ColorDirectPlayer.Debug ());
-		Print ("[SchanaChat] ColorGlobal");
-		Print (ColorGlobal.Debug ());
-		Print ("[SchanaChat] ColorGlobalPlayer");
-		Print (ColorGlobalPlayer.Debug ());
-		Print ("[SchanaChat] ColorServer");
-		Print (ColorServer.Debug ());
-		Print ("[SchanaChat] ColorAlert");
-		Print (ColorAlert.Debug ());
-	}
-}
-
-class SchanaColour{
-	int R;
-	int G;
-	int B;
-	
-	void SchanaColour (vector c){
-		float r =c[0];
-		float g =c[1];
-		float b =c[2];
-		R = r;
-		G = g;
-		B = b;
-	}
-	
-	int Get (){
-		return ARGB (255, R, G, B);
-	}
-	
-	string Debug (){
-		return "[SchanaChat][DebugColour]R: " + R + " G: " + G + " B: " +  B;
-	}
-}
-
 ref SchanaModGlobalChatServerSettings g_SchanaModGlobalChatServerSettings;
-
 static ref SchanaModGlobalChatServerSettings GetSchanaModGlobalChatServerSettings () {
     if (!g_SchanaModGlobalChatServerSettings) {
         g_SchanaModGlobalChatServerSettings = new ref SchanaModGlobalChatServerSettings;
-		
-		if ( GetGame ().IsServer ()){
-			g_SchanaModGlobalChatServerSettings.Load ();
-		}
+        
+        if ( GetGame ().IsServer ()){
+            g_SchanaModGlobalChatServerSettings.loadConfig ();
+        }
     }
     return g_SchanaModGlobalChatServerSettings;
 }
+
+class SchanaModGlobalChatServerSettings {
+	
+    protected static string profilePath = "$profile:";
+    protected static string dir = "SchanaModGlobalChat";
+    protected static string file = "chat-settings.json";
+    protected static string fullPath = profilePath + dir + "/" + file;
+
+    static vector defaultColourDirect        = "255 255 255";   // white
+    static vector defaultColourGlobal        = "1 255 238";     // lt blue
+    static vector defaultColourServer        = "255 89 1";      // orange
+    static vector defaultColourAlert         = "163 5 0";       // red 
+
+    protected ref SchanaColour ColourDirect         = new SchanaColour (defaultColourDirect);
+    protected ref SchanaColour ColourDirectPlayer   = new SchanaColour (defaultColourDirect);
+   	protected ref SchanaColour ColourGlobal         = new SchanaColour (defaultColourGlobal);
+    protected ref SchanaColour ColourGlobalPlayer   = new SchanaColour (defaultColourGlobal);
+    protected ref SchanaColour ColourServer         = new SchanaColour (defaultColourServer);
+    protected ref SchanaColour ColourAlert          = new SchanaColour (defaultColourAlert);
+    protected ref array<ref RoleSettingsData> Roles = new array<ref RoleSettingsData>;
+
+    // TODO GET ROLE COLOUR TO CLIENT FOR WIDGET COLOUR WITHOUT STORING IN CONFIG
+
+    //* Mod Configs */
+    void loadConfig(){
+        if (FileExist(fullPath)){
+            JsonFileLoader<SchanaModGlobalChatServerSettings>.JsonLoadFile(profilePath + dir + "/" + file, this);
+        } else {
+            makeConfig();
+        }
+    }
+
+    protected void makeConfig(){
+        if (!FileExist(fullPath)){
+            MakeDirectory(profilePath + dir + "/");
+        }
+
+        // Roles.Insert(new RoleSettingsData("Staff", defaultIds, ColourAlert));
+        SetRoles();
+        JsonFileLoader<SchanaModGlobalChatServerSettings>.JsonSaveFile(profilePath + dir + "/" + file, this);
+    }
+
+    void SetRoles(){
+        array<string> playerIds = {
+            "76561197997664497"
+        };
+        RoleSettingsData defaultRole  = new RoleSettingsData("Staff", playerIds, new SchanaColour(defaultColourAlert));
+        Roles.Insert(new RoleSettingsData("Staff", playerIds, ColourAlert));
+    }
+
+    //* Getters */
+    int GetColourDirect () {
+        return ColourDirect.Get ();
+    }
+	
+    int GetColourDirectPlayer () {
+        return ColourDirectPlayer.Get ();
+    }
+
+
+    int GetColourGlobal () {
+        return ColourGlobal.Get ();
+    }
+	
+    int GetColourGlobalPlayer () {
+        return ColourGlobalPlayer.Get ();
+    }
+
+    int GetColourServer () {
+        return ColourServer.Get ();
+    }
+
+    int GetColourAlert () {
+        return ColourAlert.Get ();
+    }
+
+    array<ref RoleSettingsData> GetRoles(){
+        return Roles;
+    }
+
+    RoleSettingsData FindRoleByName(string name){
+        for (int i=0; i<Roles.Count();i++){
+            if (Roles[i].GetName() == name){
+                return Roles[i];
+            }
+        }
+        return null;
+    }
+
+    string GetTest () {
+        return "Hello World";
+    }
+
+    //* Debug */
+
+    void Debug (){
+		Print ("[SchanaChat] ColourDirect");
+		Print (ColourDirect.Debug ());
+		Print ("[SchanaChat] ColourDirectPlayer");
+		Print (ColourDirectPlayer.Debug ());
+		Print ("[SchanaChat] ColourGlobal");
+		Print (ColourGlobal.Debug ());
+		Print ("[SchanaChat] ColourGlobalPlayer");
+		Print (ColourGlobalPlayer.Debug ());
+		Print ("[SchanaChat] ColourServer");
+		Print (ColourServer.Debug ());
+		Print ("[SchanaChat] ColourAlert");
+		Print (ColourAlert.Debug ());
+	}
+}
+
+ref array<ref RoleSettingsData> g_SchanaRoles;
