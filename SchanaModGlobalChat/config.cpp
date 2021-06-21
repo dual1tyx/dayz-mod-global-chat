@@ -12,6 +12,7 @@ class CfgMods
 	{
 		name = "SchanaModGlobalChat";
 		action = "https://github.com/schana/dayz-mod-global-chat";
+		credits = "DUAL";
 		author = "schana";
 		type = "mod";
 		inputs = "SchanaModGlobalChat/Data/Inputs.xml";
