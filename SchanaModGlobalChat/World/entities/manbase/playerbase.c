@@ -1,4 +1,5 @@
 modded class PlayerBase extends ManBase {
+    protected string m_ServerRole = "";
     static const int SCHANA_RPC_CHAT_CLIENT_SEND_GLOBAL = -44301;
 
     override void OnRPC (PlayerIdentity sender, int rpc_type, ParamsReadContext ctx) {
@@ -8,7 +9,14 @@ modded class PlayerBase extends ManBase {
                     Param1<string> chatParams;
                     if (!ctx.Read (chatParams)) return;
                     string name = sender.GetName ();
-                    string text = name + " : " + chatParams.param1;
+
+                    string text;
+                    if (m_ServerRole){
+                        text = m_ServerRole+" # " + name + " : " + chatParams.param1;
+                    }
+                    else {
+                        text = name + " : " + chatParams.param1;
+                    }
 
                     ref array<Man> players = new array<Man> ();
                     GetGame ().GetPlayers (players);
@@ -24,5 +32,13 @@ modded class PlayerBase extends ManBase {
         }
 
         super.OnRPC (sender, rpc_type, ctx);
+    }
+
+    void SetRole(string role){
+        m_ServerRole = role;
+    }
+
+    string GetRole(){
+        return m_ServerRole;
     }
 }
